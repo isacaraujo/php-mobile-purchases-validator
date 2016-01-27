@@ -12,9 +12,9 @@ In your Terminal (cmd for windows), goto project directory and run:
 $ php composer.phar install
 ```
 
-Edit the file `config.xml` with info the info of your project, following this requirements:
+Edit the file `config.xml` with info of your project, following this requirements:
 
- - For get Google refresh_token, you must to go to [Google Console](https://developers.google.com/android-publisher/authorization) and follow the instructions:
+ - For get Google refresh_token, you must to go to [Google Console](https://developers.google.com/android-publisher/authorization) and follow the instructions.
  - Also you must to setup the apple environment, according with [Apple Requirements](https://developer.apple.com/library/ios/releasenotes/General/ValidateAppStoreReceipt/Chapters/ValidateRemotely.html).
 
 ### Example of config.xml file:
@@ -44,7 +44,8 @@ GET /validate/apple/{receiptId}
 ```
  - Replace the `{receiptId}` variable by data received from apple store (in base64).
  
- ```
+
+```
 GET /validate/google/product/{productId}/token/{purchaseToken}
 ```
  - Replace the `{productId}` by requested product identifier.
