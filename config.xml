@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<config>
+	<apple>
+		<!-- In case of tests, use 'SANDBOX' -->
+		<environment>PRODUCTION</environment>
+	</apple>
+	<!-- For Google Setup, please view this link: -->
+	<!-- https://developers.google.com/android-publisher/authorization -->
+	<google>
+		<clientId>1234</clientId>
+		<clientSecret>5678</clientSecret>
+		<refreshToken>LoremIpsum12345678</refreshToken>
+		<packageName>com.mcl.app.XmlLoremIpsum</packageName>
+	</google>
+</config>
