@@ -11,7 +11,7 @@ use ReceiptValidator\GooglePlay\Validator as PlayValidator;
 $app = new \Slim\App();
 $config = simplexml_load_file('config.xml');
 
-function sendResponse($res, $message, $status = 404, $options = []) {
+function sendResponse($res, $message, $status = 200, $options = []) {
   $options = array_merge([
     'success' => $status === 200,
     'status' => $status,
