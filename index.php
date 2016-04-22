@@ -5,8 +5,8 @@
 // https://www.youtube.com/watch?v=jB5TvzzggWw
 require_once 'vendor/autoload.php';
 
-use ReceiptValidator\iTunes\Validator as ITunesValidator;
-use ReceiptValidator\GooglePlay\Validator as PlayValidator;
+use ReceiptValidator\iTunes\Validator     as ITunesValidator,
+    ReceiptValidator\GooglePlay\Validator as PlayValidator;
 
 $app = new \Slim\App();
 $config = simplexml_load_file('config.xml');
@@ -25,9 +25,11 @@ function sendResponse($res, $message, $status = 200, $options = []) {
 }
 
 $app->get('/validate/apple/{receiptId}', function ($req, $res, $args) use ($config) {
-  $env = strtoupper("{$config->apple->environment}") === 'PRODUCTION' ? ITunesValidator::ENDPOINT_PRODUCTION : ITunesValidator::ENDPOINT_SANDBOX;
-  $receipt = $args['receiptId'];
-  $validator = new ITunesValidator($env);
+  $endpoint  = strtoupper("{$config->apple->environment}") === 'PRODUCTION' ? 
+    ITunesValidator::ENDPOINT_PRODUCTION : 
+    ITunesValidator::ENDPOINT_SANDBOX;
+  $receipt   = $args['receiptId'];
+  $validator = new ITunesValidator($endpoint);
   try {
     $response = $validator->setReceiptData($receipt)->validate();
   } catch (\Exception $e) {
@@ -46,14 +48,12 @@ $app->get('/validate/apple/{receiptId}', function ($req, $res, $args) use ($conf
 });
 
 $app->get('/validate/google/product/{productId}/token/{purchaseToken}', function ($req, $res, $args) use ($config) {
-  $clientId = "{$config->google->clientId}";
-  $clientSecret = "{$config->google->clientSecret}";
-  $refreshToken = "{$config->google->refreshToken}";
-  $packageName = "{$config->google->packageName}";
-  $productId = $args['productId'];
+  $clientId      = "{$config->google->clientId}";
+  $clientSecret  = "{$config->google->clientSecret}";
+  $refreshToken  = "{$config->google->refreshToken}";
+  $packageName   = "{$config->google->packageName}";
+  $productId     = $args['productId'];
   $purchaseToken = $args['purchaseToken'];
-
-  
   try {
     $validator = new PlayValidator([
       'client_id' => $clientId,
