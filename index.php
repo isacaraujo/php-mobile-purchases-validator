@@ -8,52 +8,57 @@ require_once 'vendor/autoload.php';
 use ReceiptValidator\iTunes\Validator     as ITunesValidator,
     ReceiptValidator\GooglePlay\Validator as PlayValidator;
 
-$app = new \Slim\App();
 $config = simplexml_load_file('config.xml');
 
-function sendResponse($res, $message, $status = 200, $options = []) {
+function param($key, $default = null) {
+  if (!isset($_REQUEST[$key])) return $default;
+  return $_REQUEST[$key];
+}
+
+function sendResponse($message, $status = 200, $options = []) {
   $options = array_merge([
     'success' => $status === 200,
     'status' => $status,
     'message' => $message
   ], $options);
-  $res = $res->withStatus($status)
-      ->withHeader('Content-type', 'application/json');
-  $res->getBody()
-      ->write(json_encode($options));
-  return $res;
+  
+  header('Content-type: application/json');
+  print json_encode($options);
+  exit;
 }
 
-$app->get('/validate/apple/{receiptId}', function ($req, $res, $args) use ($config) {
+function dispatchApple() {
+  global $config;
   $endpoint  = strtoupper("{$config->apple->environment}") === 'PRODUCTION' ? 
     ITunesValidator::ENDPOINT_PRODUCTION : 
     ITunesValidator::ENDPOINT_SANDBOX;
-  $receipt   = $args['receiptId'];
+  $receipt   = param('receiptId');
   $validator = new ITunesValidator($endpoint);
   try {
     $response = $validator->setReceiptData($receipt)->validate();
   } catch (\Exception $e) {
-    return sendResponse($res, $e->getMessage(), 500);
+    return sendResponse($e->getMessage(), 500);
   }
 
   if ($response->isValid()) {
-    return sendResponse($res, 'This receipt is valid.', 200, [
+    return sendResponse('This receipt is valid.', 200, [
       'receipt' => $response->getReceipt()
     ]);
   } else {
-    return sendResponse($res, 'This receipt is invalid.', 403, [
+    return sendResponse('This receipt is invalid.', 403, [
       'result_code' => $response->getResultCode()
     ]);
   }
-});
+}
 
-$app->get('/validate/google/product/{productId}/token/{purchaseToken}', function ($req, $res, $args) use ($config) {
+function dispatchGoogle() {
+  global $config;
   $clientId      = "{$config->google->clientId}";
   $clientSecret  = "{$config->google->clientSecret}";
   $refreshToken  = "{$config->google->refreshToken}";
   $packageName   = "{$config->google->packageName}";
-  $productId     = $args['productId'];
-  $purchaseToken = $args['purchaseToken'];
+  $productId     = param('productId');
+  $purchaseToken = param('purchaseToken');
   try {
     $validator = new PlayValidator([
       'client_id' => $clientId,
@@ -67,9 +72,23 @@ $app->get('/validate/google/product/{productId}/token/{purchaseToken}', function
   } catch (\Exception $e) {
     $message = $e->getMessage();
     $status = preg_match('/\(404\)/', $message) ? 404 : 403;
-    return sendResponse($res, $message, $status);
+    return sendResponse($message, $status);
   }
-  return sendResponse($res, 'This product is valid.');
-});
+  return sendResponse('This product is valid.');
+}
 
-$app->run();
+function main() {
+
+  ini_set('display_errors', true);
+  ini_set('error_reporting', E_ALL);
+
+  $requestName = 'dispatch' . ucfirst(param('service'));
+
+  if (!function_exists($requestName)) {
+    return sendResponse('Service Not Found', 404);
+  }
+
+  return call_user_func($requestName, $_REQUEST);
+}
+
+main();
